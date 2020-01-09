@@ -12,6 +12,7 @@
 # ignore large data files too big for git
 *.parquet
 *.p
+*.h5
 
 # IPython
 profile_default/
