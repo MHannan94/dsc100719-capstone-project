@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import cv2
 import pickle
+import matplotlib.pyplot as plt
+
 
 def resize(df, size=64):
     resized = {}
@@ -23,3 +25,13 @@ def create_training_data(df):
     Y_consonant = pd.get_dummies(df['consonant_diacritic']).values
     return X, Y_root, Y_vowel, Y_consonant
 
+def show_sample_imgs(imgs, sample_size):
+    ncols = 5
+    nrows = int(np.ceil(sample_size/ncols))
+    fig, ax = plt.subplots(nrows, ncols, figsize= (16,8))
+    idxs = np.random.choice(len(imgs), sample_size, replace= False)
+    for i,idx in enumerate(idxs):
+        img = imgs[idx].reshape(64,64)
+        ax.flatten()[i].imshow(img, cmap= 'gist_gray_r')
+    plt.show()
+    return idxs
