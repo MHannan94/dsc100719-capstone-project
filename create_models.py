@@ -7,35 +7,41 @@ import os
 import pickle
 from data_functions import show_sample_imgs
 import matplotlib.pyplot as plt
-%matplotlib inline
-
-
 
 class ModelEvaluation():
-    def __init__(self, model):
+    def __init__(self, model, hist= []):
         self.model = model
+        self.hist = hist
         self.model.summary()
     
+    # to save files without overwriting existing saved models, count the number of saved models in the directory
     def count_saved(self, directory= '.', condition= '.h5'):
         self.num_saved = len([file for file in os.listdir(directory) if condition in file])
     
-    def train(self, x_train, y_train, epochs, batch_size, validation_size):
+    # compile, train and save training history in a variable
+    def train(self, x_train, y_train, epochs, batch_size, validation_split):
         self.model.compile(optimizer= 'adam',
                            loss= 'categorical_crossentropy',
                            metrics= ['accuracy'])
         self.hist = self.model.fit(x_train, y_train,
                                    epochs = epochs,
                                    batch_size= batch_size,
-                                   validation_size= validation_size)
+                                   validation_split= validation_split)
     
+    # using the history, plot the loss and accuracy of the model against number of epochs
     def plot_loss(self):
+        if not self.hist:
+            return 'Model not trained. Run the train method on the class instance.'
         epochs = len(self.hist.history['loss'])
+        # the names of the layers change everytime a new model is instantiated
+        # create a list of the names of the target layers to access the loss
+        # values from the history variable
         loss_names = []
         for name in self.model.output_names:
             loss_names.append(name + '_loss')
             loss_names.append('val_' +name + '_loss')
         plt.style.use('ggplot')
-        plt.figure(figsize= (12,15))
+        plt.figure(figsize= (12,13))
         plt.plot(np.arange(0, epochs), self.hist.history['loss'], label='train_loss')
         plt.plot(np.arange(0, epochs), self.hist.history[loss_names[0]], label='train_root_loss')
         plt.plot(np.arange(0, epochs), self.hist.history[loss_names[2]], label='train_vowel_loss')
@@ -53,13 +59,18 @@ class ModelEvaluation():
         plt.show()
     
     def plot_accuracy(self):
+        if not self.hist:
+            return 'Model not trained. Run the train method on the class instance.'
         epochs = len(self.hist.history['loss'])
+        # the names of the layers change everytime a new model is instantiated
+        # create a list of the names of the target layers to access the accuracy
+        # values from the history variable
         acc_names = []
         for name in self.model.output_names:
             acc_names.append(name + '_accuracy')
             acc_names.append('val_' +name + '_accuracy')
         plt.style.use('ggplot')
-        plt.figure(figsize= (12,15))
+        plt.figure(figsize= (12,13))
         plt.plot(np.arange(0, epochs), self.hist.history[acc_names[0]], label='train_root_accuracy')
         plt.plot(np.arange(0, epochs), self.hist.history[acc_names[2]], label='train_vowel_accuracy')
         plt.plot(np.arange(0, epochs), self.hist.history[acc_names[4]], label='train_consonant_accuracy')
@@ -80,6 +91,8 @@ class ModelEvaluation():
         
     def save_model(self):
         self.count_saved()
+        if not self.hist:
+            return 'Model not trained. Run the train method on the class instance.'
         self.model.save('model_{}.h5'.format(self.num_saved + 1))
         pickle.dump(self.hist, open('model_{}_history.p'.format(self.num_saved + 1), 'wb'))
         
@@ -94,7 +107,18 @@ class ModelEvaluation():
         y_root = np.argmax(y_test[0][idxs], axis= 1)
         y_vowel = np.argmax(y_test[1][idxs], axis= 1)
         y_consonant = np.argmax(y_test[2][idxs], axis= 1)
+        col_level_names = [['predicted', 'true'],
+                           ['root', 'vowel', 'consonant']]
+        cols= pd.MultiIndex.from_product(col_level_names)
+        index= ['image_{}'.format(i) for i in range(len(y_root))]
+        results = pd.DataFrame([root_pred, vowel_pred, consonant_pred,
+                                y_root, y_vowel, y_consonant],
+                               index= cols,
+                               columns= index).T
+        return results
         
     def evaluation(self, x_test, y_test):
-        self.evaluation = self.model.evaluate(x_test, y_test)
+        self.evaluation = list(zip(self.model.metrics_names,
+                                   self.model.evaluate(x_test, y_test))
+                               )
         print(self.evaluation)

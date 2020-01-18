@@ -28,10 +28,12 @@ def create_training_data(df):
 def show_sample_imgs(imgs, sample_size):
     ncols = 5
     nrows = int(np.ceil(sample_size/ncols))
-    fig, ax = plt.subplots(nrows, ncols, figsize= (16,8))
+    fig, ax = plt.subplots(nrows, ncols, figsize= (16, (nrows*3 +1)))
+    # randomly select images from the data
     idxs = np.random.choice(len(imgs), sample_size, replace= False)
     for i,idx in enumerate(idxs):
         img = imgs[idx].reshape(64,64)
         ax.flatten()[i].imshow(img, cmap= 'gist_gray_r')
     plt.show()
+    # return the indexes of the displayed images to use for predictions
     return idxs
