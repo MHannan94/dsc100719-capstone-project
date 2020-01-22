@@ -82,7 +82,7 @@ class ModelEvaluation():
         plt.title('Accuracy against number of epochs')
         plt.xlabel('Epoch #')
         plt.ylabel('Accuracy')
-        plt.legend(loc='upper right')
+        plt.legend(loc='lower right')
         plt.show()
     
     def plot_metrics(self):
@@ -96,23 +96,45 @@ class ModelEvaluation():
         self.model.save('model_{}.h5'.format(self.num_saved + 1))
         pickle.dump(self.hist, open('model_{}_history.p'.format(self.num_saved + 1), 'wb'))
         
-    def test(self, x_test, y_test, sample_size= 10):
+    def test(self, labels_df, x_test, y_test, sample_size= 10):
+        # show images and get list of indexs for images
         idxs = show_sample_imgs(x_test, sample_size)
+        # create dataframes with labels and components
+        root_map = labels_df[
+            labels_df['component_type'] == 'grapheme_root'].reset_index(drop=True)
+        vowel_map = labels_df[
+            labels_df['component_type'] == 'vowel_diacritic'].reset_index(drop=True)
+        consonant_map = labels_df[
+            labels_df['component_type'] == 'consonant_diacritic'].reset_index(drop=True)
+        # predict labels and retrieve components from map dataframes
         root_probas = self.model.predict(x_test[idxs])[0]
         vowel_probas = self.model.predict(x_test[idxs])[1]
         consonant_probas = self.model.predict(x_test[idxs])[2]
         root_pred = np.argmax(root_probas, axis= 1)
+        root_pred_comp = root_map.iloc[root_pred]['component'].values
         vowel_pred = np.argmax(vowel_probas, axis= 1)
+        vowel_pred_comp = vowel_map.iloc[vowel_pred]['component'].values
         consonant_pred = np.argmax(consonant_probas, axis= 1)
-        y_root = np.argmax(y_test[0][idxs], axis= 1)
-        y_vowel = np.argmax(y_test[1][idxs], axis= 1)
-        y_consonant = np.argmax(y_test[2][idxs], axis= 1)
+        consonant_pred_comp = consonant_map.iloc[consonant_pred]['component'].values
+        root = np.argmax(y_test[0][idxs], axis= 1)
+        root_comp = root_map.iloc[root]['component'].values
+        vowel = np.argmax(y_test[1][idxs], axis= 1)
+        vowel_comp = vowel_map.iloc[vowel]['component'].values
+        consonant = np.argmax(y_test[2][idxs], axis= 1)
+        consonant_comp = consonant_map.iloc[consonant]['component'].values
+        # create dataframe to display results
         col_level_names = [['predicted', 'true'],
-                           ['root', 'vowel', 'consonant']]
+                           ['root', 'r_comp',
+                            'vowel', 'v_comp',
+                            'consonant', 'c_comp']]
         cols= pd.MultiIndex.from_product(col_level_names)
-        index= ['image_{}'.format(i) for i in range(len(y_root))]
-        results = pd.DataFrame([root_pred, vowel_pred, consonant_pred,
-                                y_root, y_vowel, y_consonant],
+        index= ['image_{}'.format(i) for i in range(len(root))]
+        results = pd.DataFrame([root_pred, root_pred_comp,
+                                vowel_pred, vowel_pred_comp,
+                                consonant_pred, consonant_pred_comp,
+                                root, root_comp, 
+                                vowel, vowel_comp, 
+                                consonant, consonant_comp],
                                index= cols,
                                columns= index).T
         return results
