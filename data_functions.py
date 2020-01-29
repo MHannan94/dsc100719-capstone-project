@@ -4,7 +4,8 @@ import cv2
 import pickle
 import matplotlib.pyplot as plt
 
-
+# Takes all the rows of a data frame, resizes the image using cv2, stores the resized image in a dictionary
+# and returns a dataframe of the resized images
 def resize(df, size=64):
     resized = {}
     for i in range(df.shape[0]):
@@ -14,6 +15,7 @@ def resize(df, size=64):
     return resized
 
 def create_training_data(df):
+    # drop id and target values, normalize so that pixel values are between 0 and 1
     X = df.drop(
             ['image_id', 'grapheme_root', 'vowel_diacritic', 'consonant_diacritic'],
             axis= 1)/255
@@ -26,6 +28,7 @@ def create_training_data(df):
     return X, Y_root, Y_vowel, Y_consonant
 
 def show_sample_imgs(imgs, sample_size):
+    # create subplots for images
     ncols = 5
     nrows = int(np.ceil(sample_size/ncols))
     fig, ax = plt.subplots(nrows, ncols, figsize= (16, (nrows*3 +1)))
