@@ -45,4 +45,16 @@ My initial model had difficulty classifying the root character. I expected this 
 
 ## Improving the model
 
-I included more convolution layers to increase the model's ability to detect features in the images. I looked at the performance of the model during each epoch of training, looking for indications of overfitting. The model was performing well on the validation set, giving a root accuracy of 92.15%, vowel accuracy of 98.00% and a consonant accuracy of 97.83%.
+I included more convolution layers to increase the model's ability to detect features in the images. I looked at the performance of the model during each epoch of training, looking for indications of overfitting. The model performed well on the validation set, giving a root accuracy of 92.15%, vowel accuracy of 98.00% and a consonant accuracy of 97.83%.
+
+## Next steps
+
+My best model took approximately 3 hours to run in the cloud, because of the complexity of the network. To improve the model, I can add more layers, increasing the complexity making it possible to detect smaller differences between graphemes. However, it is important to consider the cost of these additions, the main cost being time.
+
+### Order of notebooks
+<OL>
+    <LI><code>data_loading_model_1.ipynb</code></LI>
+    <LI><code>model_2_3.ipynb</code></LI>
+    <LI><code>model_4_5_6_7.ipynb</code></LI>
+    <LI><code>final_model_and_results.ipynb</code></LI>
+</OL>
